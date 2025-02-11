@@ -86,12 +86,15 @@ router.patch(
 
       const groupInfo = await GroupModel.findOne({ _id: groupId });
       if (!groupInfo) res.status(400).json("No group is there");
-
-      const response = await GroupModel.updateOne(
-        { _id: groupId },
-        { adminIds: [...groupInfo?.adminIds, userId] }
-      );
-      res.json(response);
+      if (!groupInfo?.adminIds.includes(userId)) {
+        const response = await GroupModel.updateOne(
+          { _id: groupId },
+          { adminIds: [...groupInfo?.adminIds, userId] }
+        );
+        res.json(response);
+      } else {
+        res.json("User already part of this group");
+      }
     } catch (e) {
       res.status(400).json(e?.message);
     }
