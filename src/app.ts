@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth";
 import profileRouter from "./routes/profile";
 import groupRouter from "./routes/group";
+import QuestionRouter from "./routes/questions";
 
 const app = express();
 app.use(express.json());
@@ -14,6 +15,7 @@ app.use(cookieParser());
 app.use("/auth", authRouter);
 app.use("/profile", profileRouter);
 app.use("/group", groupRouter);
+app.use("/que", QuestionRouter);
 
 const connectDB = async () => {
   try {

@@ -26,3 +26,20 @@ export const groupAllowedProps = {
     },
   },
 };
+
+export const questionAllowedProps = {
+  create: {
+    allowed: ["question", "dateTime", "groupId"],
+    error: "Invalid data for questions",
+    isValid({ data }: { data: Record<string, string> }) {
+      return Object.keys(data)?.every((prop) => this.allowed.includes(prop));
+    },
+  },
+  update: {
+    allowed: ["question", "dateTime"],
+    error: "Invalid data for questions",
+    isValid({ data }: { data: Record<string, string> }) {
+      return Object.keys(data)?.every((prop) => this.allowed.includes(prop));
+    },
+  },
+};

@@ -10,19 +10,18 @@ const router = Router();
 router.post(
   "/create",
   auth,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       if (!groupAllowedProps.create.isValid({ data: Object.keys(req.body) })) {
         res.status(400).json(groupAllowedProps.create.error);
       }
-
       componentValidate({ validateFor: "createGroup", values: req.body });
       const userId = await getCurrentUserId(req, res);
-      if (!userId) res.status(400).json("User not valid!");
+      if (!userId) return res.status(400).json("User not valid!");
       const payload = { ...req.body, adminIds: [userId] };
       const group = new GroupModel(payload);
       const response = await group.save();
-      res.json(response);
+      return res.json(response);
     } catch (e) {
       res.status(400).json(e.message);
     }
@@ -32,7 +31,7 @@ router.post(
 router.get(
   "/getGroups",
   auth,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       const userId = await getCurrentUserId(req, res);
       /**
@@ -55,21 +54,22 @@ router.get(
 router.get(
   "/groupMembers/:groupId",
   auth,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       const userId = await getCurrentUserId(req, res);
       const { groupId } = req.params;
-      if (!groupId) res.status(400).json("No valid group");
+      if (!groupId) return res.status(400).json("No valid group");
+
       const groupInfo = await GroupModel.findOne({ _id: groupId });
       if (!groupInfo?.adminIds.includes(userId))
-        res.status(400).json("User is not part of this group");
+        return res.status(400).json("User is not part of this group");
 
       const members = await UserModel.find({
         _id: { $in: groupInfo?.adminIds },
       });
-      res.json(members);
+      return res.json(members);
     } catch (e) {
-      res.status(400).json(e.message);
+      return res.status(400).json(e.message);
     }
   }
 );
@@ -77,15 +77,16 @@ router.get(
 router.patch(
   "/addMemberInGroup",
   auth,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     //for adding any memeber to a group
     try {
       const userId = await getCurrentUserId(req, res);
       const { groupId } = req.body;
-      if (!groupId) res.status(400).json("No valid group");
+      if (!groupId) return res.status(400).json("No valid group");
 
       const groupInfo = await GroupModel.findOne({ _id: groupId });
-      if (!groupInfo) res.status(400).json("No group is there");
+      if (!groupInfo) return res.status(400).json("No group is there");
+
       if (!groupInfo?.adminIds.includes(userId)) {
         const response = await GroupModel.updateOne(
           { _id: groupId },
@@ -93,7 +94,7 @@ router.patch(
         );
         res.json(response);
       } else {
-        res.json("User already part of this group");
+        return res.json("User already part of this group");
       }
     } catch (e) {
       res.status(400).json(e?.message);
