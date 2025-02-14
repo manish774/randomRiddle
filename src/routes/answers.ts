@@ -1,12 +1,12 @@
 import { Router, Request, Response, NextFunction } from "express";
-import QuestionModel from "../models/questions-model";
+import AnswersnModel from "../models/answers-model";
 import { auth, getCurrentUserId } from "../auth/auth";
 import {
   getFormattedTimestamp,
   IActivnessName,
   IStatusName,
 } from "../utils/common";
-import { questionAllowedProps } from "../utils/allowedPropsToUpdate";
+import { answersAllowedProps } from "../utils/allowedPropsToUpdate";
 import GroupModel from "../models/group-model";
 
 const router = Router();
@@ -16,19 +16,19 @@ router.post(
   auth,
   async (req: Request, res: Response): Promise<any> => {
     try {
-      const isValid = questionAllowedProps.create.isValid({ data: req.body });
+      const isValid = answersAllowedProps.create.isValid({ data: req.body });
       if (!isValid)
-        return res.status(400).json(questionAllowedProps.create.error);
+        return res.status(400).json(answersAllowedProps.create.error);
 
       const userId = await getCurrentUserId(req, res);
-      const { question, dateTime, groupId } = req.body;
+      const { answer, dateTime, groupId } = req.body;
       const todaDate = dateTime;
       const group = await GroupModel.findOne({ _id: groupId });
 
       if (!group) return res.status(400).json("Invalid group");
 
-      const checkIfQuestion = await QuestionModel.find({
-        askedBy: userId,
+      const checkIfQuestion = await AnswersnModel.find({
+        answeredBy: userId,
         dateTime: { $regex: todaDate.split("T")[0] },
         groupId: groupId,
       });
@@ -36,13 +36,13 @@ router.post(
       if (
         todaDate.split("T")[0] === checkIfQuestion[0]?.dateTime?.split("T")[0]
       )
-        return res.status(400).json("Can not add more question in same day");
+        return res.status(400).json("Can not add more answers in same day");
 
-      const payload = new QuestionModel({
-        question,
+      const payload = new AnswersnModel({
+        answer,
         dateTime,
         groupId,
-        askedBy: userId,
+        answeredBy: userId,
         status: IStatusName.ENABLE,
         isActive: IActivnessName.ACTIVE,
       });
@@ -60,24 +60,24 @@ router.patch(
   auth,
   async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-      const { question, dateTime, qid, groupId } = req.body;
-      const isValid = questionAllowedProps.update.isValid({
-        data: { question, dateTime },
+      const { answer, dateTime, aid, groupId } = req.body;
+      const isValid = answersAllowedProps.update.isValid({
+        data: { answer, dateTime },
       });
       if (!isValid) {
-        res.status(400).json(questionAllowedProps.update.error);
+        return res.status(400).json(answersAllowedProps.update.error);
       } else {
         const userId = await getCurrentUserId(req, res);
 
         const todaDate = dateTime;
-        const isQuestionIdSame = await QuestionModel.findOne({
-          askedBy: userId,
-          _id: qid,
+        const isQuestionIdSame = await AnswersnModel.findOne({
+          answeredBy: userId,
+          _id: aid,
         });
 
         if (!isQuestionIdSame) return res.status(400).json("Invalid question");
-        const checkIfQuestion = await QuestionModel.find({
-          askedBy: userId,
+        const checkIfQuestion = await AnswersnModel.find({
+          answeredBy: userId,
           dateTime: { $regex: todaDate.split("T")[0] },
           groupId: groupId,
         });
@@ -87,9 +87,9 @@ router.patch(
         )
           return res.status(400).json("Can not add more question in same day");
 
-        const response = await QuestionModel.findByIdAndUpdate(
-          { _id: qid },
-          { question, dateTime }
+        const response = await AnswersnModel.findByIdAndUpdate(
+          { _id: aid },
+          { answer, dateTime }
         );
         res.json(response);
         //const response = await payload.save();
@@ -109,9 +109,9 @@ router.delete(
       const { id } = req.body;
       const userId = await getCurrentUserId(req, res);
 
-      const gQuestion = await QuestionModel.findOneAndDelete({
+      const gQuestion = await AnswersnModel.findOneAndDelete({
         _id: id,
-        askedBy: userId,
+        answeredBy: userId,
       });
       if (!gQuestion) return res.status(400).json("Invalid request");
       res.json(gQuestion);
@@ -133,7 +133,7 @@ router.get(
       const userId = await getCurrentUserId(req, res);
       let resp = null;
       if (filter === "ALL") {
-        resp = await QuestionModel.find({ askedBy: userId });
+        resp = await AnswersnModel.find({ answeredBy: userId });
       }
       let query = {};
 
@@ -143,8 +143,8 @@ router.get(
         query = { isActive: IActivnessName.INACTIVE };
       }
 
-      const questionsList = await QuestionModel.find({
-        askedBy: userId,
+      const questionsList = await AnswersnModel.find({
+        answeredBy: userId,
         ...query,
       });
 

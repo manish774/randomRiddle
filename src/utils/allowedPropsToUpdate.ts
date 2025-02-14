@@ -43,3 +43,20 @@ export const questionAllowedProps = {
     },
   },
 };
+
+export const answersAllowedProps = {
+  create: {
+    allowed: ["answer", "dateTime", "groupId"],
+    error: "Invalid data for answer",
+    isValid({ data }: { data: Record<string, string> }) {
+      return Object.keys(data)?.every((prop) => this.allowed.includes(prop));
+    },
+  },
+  update: {
+    allowed: ["answer", "dateTime"],
+    error: "Invalid data for answers",
+    isValid({ data }: { data: Record<string, string> }) {
+      return Object.keys(data)?.every((prop) => this.allowed.includes(prop));
+    },
+  },
+};
