@@ -102,4 +102,59 @@ router.patch(
   }
 );
 
+router.delete(
+  "/delete",
+  auth,
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    try {
+      const { id } = req.body;
+      const userId = await getCurrentUserId(req, res);
+
+      const gQuestion = await QuestionModel.findOneAndDelete({
+        _id: id,
+        askedBy: userId,
+      });
+      if (!gQuestion) return res.status(400).json("Invalid request");
+      res.json(gQuestion);
+    } catch (e) {
+      res.status(400).json(e.message);
+    }
+  }
+);
+
+router.get(
+  "/get/:filter",
+  auth,
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    try {
+      const {
+        filter,
+      }: { filter?: "ALL" | IActivnessName.ACTIVE | IActivnessName.INACTIVE } =
+        req.params;
+      const userId = await getCurrentUserId(req, res);
+      let resp = null;
+      if (filter === "ALL") {
+        resp = await QuestionModel.find({ askedBy: userId });
+      }
+      let query = {};
+
+      if (filter === IActivnessName.ACTIVE) {
+        query = { isActive: IActivnessName.ACTIVE };
+      } else if (filter === IActivnessName.INACTIVE) {
+        query = { isActive: IActivnessName.INACTIVE };
+      } else if (filter === "ALL" || filter === null) {
+        query = {};
+      }
+      const questionsList = await QuestionModel.find({
+        askedBy: userId,
+        ...query,
+      });
+
+      res.json(questionsList);
+    } catch (e) {
+      res.status(400).json();
+    }
+  }
+);
+
 export default router;
