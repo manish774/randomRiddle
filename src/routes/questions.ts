@@ -22,19 +22,18 @@ router.post(
 
       const userId = await getCurrentUserId(req, res);
       const { question, dateTime, groupId } = req.body;
-      const todaDate = dateTime;
       const group = await GroupModel.findOne({ _id: groupId });
 
       if (!group) return res.status(400).json("Invalid group");
 
       const checkIfQuestion = await QuestionModel.find({
         askedBy: userId,
-        dateTime: { $regex: todaDate.split("T")[0] },
+        dateTime: { $regex: dateTime.split("T")[0] },
         groupId: groupId,
       });
 
       if (
-        todaDate.split("T")[0] === checkIfQuestion[0]?.dateTime?.split("T")[0]
+        dateTime.split("T")[0] === checkIfQuestion[0]?.dateTime?.split("T")[0]
       )
         return res.status(400).json("Can not add more question in same day");
 

@@ -7,6 +7,7 @@ import profileRouter from "./routes/profile";
 import groupRouter from "./routes/group";
 import QuestionRouter from "./routes/questions";
 import AnswerRouter from "./routes/answers";
+import GameRouter from "./routes/game";
 
 const app = express();
 app.use(express.json());
@@ -18,6 +19,7 @@ app.use("/profile", profileRouter);
 app.use("/group", groupRouter);
 app.use("/que", QuestionRouter);
 app.use("/ans", AnswerRouter);
+app.use("/game", GameRouter);
 
 const connectDB = async () => {
   try {

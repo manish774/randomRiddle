@@ -12,9 +12,9 @@ export interface IUserAuth {
 }
 
 const userAuthSchema = new Schema({
-  emailOrPhone: { type: String, required: true },
+  emailOrPhone: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true },
-  id: { type: String, required: true },
+  id: { type: String, required: true, unique: true },
 });
 
 userAuthSchema.methods.getJWT = async function () {
@@ -32,4 +32,5 @@ userAuthSchema.methods.isPasswordSame = async function (password: string) {
 };
 
 const UserAuthModel = model<IUserAuth>("userAuth", userAuthSchema);
+UserAuthModel.createIndexes();
 export default UserAuthModel;

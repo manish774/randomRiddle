@@ -11,8 +11,8 @@ export interface IQuestions {
 }
 const questions = new Schema(
   {
-    askedBy: { type: String, require: true },
-    groupId: { type: String, require: true },
+    askedBy: { type: Schema.Types.ObjectId, ref: "users", require: true },
+    groupId: { type: Schema.Types.ObjectId, ref: "group", require: true },
     question: { type: String, require: true },
     dateTime: { type: String, require: true },
     status: { type: String, require: true },
@@ -22,4 +22,5 @@ const questions = new Schema(
 );
 
 const QuestionModel = model("questions", questions);
+QuestionModel.createIndexes();
 export default QuestionModel;

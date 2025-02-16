@@ -8,7 +8,7 @@ export interface IUser {
 
 const usersSchema = new Schema(
   {
-    name: { type: String, required: true, trim: true },
+    name: { type: String, required: true, trim: true, index: true },
     email: {
       type: String,
       required: true,
@@ -27,4 +27,6 @@ const usersSchema = new Schema(
 );
 
 const UserModel = mongoose.model("users", usersSchema);
+UserModel.createIndexes();
+
 export default UserModel;

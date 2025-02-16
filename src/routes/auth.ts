@@ -4,13 +4,14 @@ import { componentValidate } from "../utils/validate";
 import UserModel from "../models/users";
 import UserAuthModel from "../models/userAuth";
 import { hash } from "bcrypt";
+import { getCurrentUserId } from "../auth/auth";
 
 const router = Router();
 
-router.post("/signup", async (req: Request, res: Response) => {
+router.post("/signup", async (req: Request, res: Response): Promise<any> => {
   try {
     if (!userAllowedProps.create.isValid({ data: Object.keys(req.body) })) {
-      res.status(400).json(userAllowedProps.create.error);
+      return res.status(400).json(userAllowedProps.create.error);
     }
     componentValidate({ validateFor: "signup", values: req.body });
     const hashedPassword = await hash(req.body.password, 10);
@@ -24,7 +25,7 @@ router.post("/signup", async (req: Request, res: Response) => {
     });
     await userAuth
       .save()
-      .then(() => {
+      .then((data) => {
         res.json(req.body);
       })
       .catch(async (error: any) => {
@@ -56,6 +57,10 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/logout", async (req: Request, res: Response) => {});
+router.get("/logout", async (req: Request, res: Response) => {
+  res
+    .cookie("token", null, { expires: new Date(Date.now()) })
+    .json("Logged out");
+});
 
 export default router;
