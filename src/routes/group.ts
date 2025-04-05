@@ -18,7 +18,7 @@ router.post(
       componentValidate({ validateFor: "createGroup", values: req.body });
       const userId = await getCurrentUserId(req, res);
       if (!userId) return res.status(400).json("User not valid!");
-      const payload = { ...req.body, adminIds: [userId] };
+      const payload = { ...req.body, adminIds: [userId], memberIds: [userId] };
       const group = new GroupModel(payload);
       const response = await group.save();
       return res.json(response);
@@ -34,17 +34,22 @@ router.get(
   async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       const userId = await getCurrentUserId(req, res);
-      /**
-       * Retrieves a list of groups where the specified user is an admin.
-       *
-       * @param userId - The ID of the user to find groups for.
-       * @returns A promise that resolves to an array of groups where the user is an admin.
-       */
-      const groups = await GroupModel.find({ adminIds: userId });
-      if (!groups) res.json("Somthing went wrong");
-      res.send(
-        groups?.map((x) => ({ _id: x._id, name: x.name, type: x.type }))
-      );
+      const page = Number(req.query.page as string) || 1;
+      const limit = Number(req.query.limit as string) || 5;
+
+      const reqParam: any = {
+        type: req.query.type,
+      };
+      if (req.query.type === "PRIVATE") {
+        reqParam["adminIds"] = userId;
+      }
+
+      const groups = await GroupModel.find(reqParam)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      if (!groups) return res.json("Something went wrong");
+      res.send(groups.map((x) => ({ _id: x._id, name: x.name, type: x.type })));
     } catch (e) {
       res.status(400).json(e.message);
     }
@@ -98,6 +103,27 @@ router.patch(
       }
     } catch (e) {
       res.status(400).json(e?.message);
+    }
+  }
+);
+
+router.post(
+  "/join",
+  auth,
+  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    try {
+      if (!groupAllowedProps.create.isValid({ data: Object.keys(req.body) })) {
+        res.status(400).json(groupAllowedProps.create.error);
+      }
+      componentValidate({ validateFor: "createGroup", values: req.body });
+      const userId = await getCurrentUserId(req, res);
+      if (!userId) return res.status(400).json("User not valid!");
+      const payload = { ...req.body, adminIds: [userId], memberIds: [userId] };
+      const group = new GroupModel(payload);
+      const response = await group.save();
+      return res.json(response);
+    } catch (e) {
+      res.status(400).json(e.message);
     }
   }
 );

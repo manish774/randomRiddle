@@ -154,4 +154,36 @@ router.get(
   }
 );
 
+router.get(
+  "/getgroup/:filter",
+  auth,
+  async (req: Request, res: Response): Promise<any> => {
+    try {
+      const {
+        filter,
+      }: { filter?: "ALL" | IActivnessName.ACTIVE | IActivnessName.INACTIVE } =
+        req.params;
+      const groupId = req.query.groupId as string;
+      if (!groupId) {
+        return res.status(400).json("Missing group id");
+      }
+
+      let query: any = { groupId };
+
+      if (filter !== "ALL") {
+        if (filter === IActivnessName.ACTIVE) {
+          query.isActive = IActivnessName.ACTIVE;
+        } else if (filter === IActivnessName.INACTIVE) {
+          query.isActive = IActivnessName.INACTIVE;
+        }
+      }
+
+      const questionsList = await QuestionModel.find(query);
+      res.json(questionsList);
+    } catch (e) {
+      res.status(400).json(e?.message);
+    }
+  }
+);
+
 export default router;

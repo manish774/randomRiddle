@@ -29,10 +29,23 @@ router.post("/signup", async (req: Request, res: Response): Promise<any> => {
         res.json(req.body);
       })
       .catch(async (error: any) => {
+        console.log(error, "..");
+
         await UserModel.findByIdAndDelete(userResp._id);
         res.status(400).send(error);
       });
   } catch (e) {
+    if (e.code === 11000) {
+      console.log(e, "i00000");
+      return res.status(400).json(
+        JSON.stringify({
+          field: Object.keys(e.errorResponse?.keyPattern)[0],
+          message: `${
+            Object.keys(e.errorResponse?.keyPattern)[0]
+          } already exists`,
+        })
+      );
+    }
     res.status(400).json(e?.message);
   }
 });
@@ -45,7 +58,8 @@ router.post("/login", async (req: Request, res: Response) => {
       if (validatePassword) {
         const token = await user.getJWT();
         res.cookie("token", token);
-        res.json(user?.emailOrPhone);
+        const userdetail = await UserModel.findOne({ email: req.body.email });
+        res.json(userdetail);
       } else {
         res.status(400).json("Password is incorrect");
       }
